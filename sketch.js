@@ -56,7 +56,7 @@ var initKelp = function(){
       pool.push(p);
     }
   }
-  clicked(w/2,h/2);
+  clicked(w/2,7*h/8);
 }
 
 

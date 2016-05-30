@@ -3,7 +3,6 @@ var w;
 var gres = 100;
 var grange;
 var gdim;
-var targetSpeed;
 var t=0;
 var tinterval=10;
 
@@ -14,7 +13,6 @@ var fixed_vals = [1,2,4,8,16,32,64,128,256];
 var setup = function(){
   colorMode(HSB, 360,1,1)
   frameRate(20);
-  createCanvas(w,h);
   createCanvas(windowWidth, windowHeight);
   w = windowWidth;
   h = windowHeight;
@@ -40,10 +38,6 @@ function pdefault(e){
   e.preventDefault()
 }
 
-
-var bw= 0;
-var a = 0;
-
 var initKelp = function(){
   pool = [];
   num = floor(w/grange);
@@ -56,7 +50,7 @@ var initKelp = function(){
       pool.push(p);
     }
   }
-  clicked(w/2,7*h/8);
+  clicked(7*w/8,28*h/30);
 }
 
 
@@ -76,30 +70,19 @@ var redrawKelp= function(interval){
 
 
 
-clicked= function(mx,my){
+var clicked = function(mx,my){
   mx%=w;
-  console.log(num);
-
   var possible_states= fixed_vals.filter(function(val){
     return val <= (w/grange);
   });
-  console.log(possible_states);
 
   index = floor(map(mx,0,w,0,possible_states.length));
-
-  var tnum = fixed_vals.filter(function(val){
-    return val <= num;
-  }).slice(-1)[0];
   num = possible_states[index];
-
 
   interval = w/num;
   tinterval = map(my,h,0,1,50);
-  console.log(interval,w/interval, mx);
   redrawKelp(interval);
 }
-
-
 
 var touchMoved= function(){
   clicked(touchX,touchY);
@@ -113,7 +96,6 @@ var draw = function(){
 
   bcol = color(0,0,0);
   fcol = color(0,0,1);
-
   background(bcol);
 
   var ydim = pool.length/gdim;
@@ -121,15 +103,11 @@ var draw = function(){
     for(var j=0; j<h/gres; j+=1){
       var index = i*ydim+j;
       var p = pool[index];
-      p.update();
       p.render();
     }
   }
   t+=tinterval;
 }
-
-
-
 
 function Shape(i,j, angle){
   this.i = i;
@@ -138,11 +116,6 @@ function Shape(i,j, angle){
   this.y = j*gres;
   this.radius = gres/2;
   this.par =random(360);
-  this.thickness = 100;
-
-  this.update = function(){
-  }
-
 
   this.render = function(){
     i=this.radius*(1+cos(t+((this.x+this.y+1)/100)+this.par));

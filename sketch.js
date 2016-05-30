@@ -1,9 +1,14 @@
 var h;
 var w;
-var res = 100;
-var gspeed=10;
+var gres = 100;
+var grange;
+var gdim;
+var targetSpeed;
+var t=0;
+var tinterval=10;
 
 var pool = [];
+var fixed_vals = [1,2,4,8,16,32,64,128,256];
 
 
 var setup = function(){
@@ -13,8 +18,10 @@ var setup = function(){
   createCanvas(windowWidth, windowHeight);
   w = windowWidth;
   h = windowHeight;
+  grange = 40;
+  gdim = floor(w/grange);
   angleMode(DEGREES);
-  init({interval:res, speed:gspeed});
+  initKelp();
 
   //disable default touch events for mobile
   var el = document.getElementsByTagName("canvas")[0];
@@ -37,13 +44,32 @@ function pdefault(e){
 var bw= 0;
 var a = 0;
 
-var init = function(r){
-  res = r.interval;
-  gspeed = r.speed;
-  for(var i=0; i<w; i+=res){
-    for(var j=0; j<h; j+=res){
+var initKelp = function(){
+  pool = [];
+  num = floor(w/grange);
+  interval = w/num;
+  gres = interval;
+
+  for(var i=0; i<w/gres; i+=1){
+    for(var j=0; j<h/gres; j+=1){
       var p = new Shape(i,j, random(360));
       pool.push(p);
+    }
+  }
+  clicked(w/2,h/2);
+}
+
+
+var redrawKelp= function(interval){
+  gres = interval;
+  var ydim = pool.length/gdim;
+  for(var i=0; i<w/gres; i+=1){
+    for(var j=0; j<h/gres; j+=1){
+      var index = i*ydim+j;
+      var p = pool[index];
+      p.x = i*gres;
+      p.y = j*gres;
+      p.radius = gres/2;
     }
   }
 }
@@ -51,17 +77,36 @@ var init = function(r){
 
 
 clicked= function(mx,my){
-  pool = [];
-  interval = w/floor(map(mx,0,w,1,20));
-  speed = map(my,h,0,1,50);
-  console.log(interval);
-  init({interval:interval, speed:speed});
+  mx%=w;
+  console.log(num);
+
+  var possible_states= fixed_vals.filter(function(val){
+    return val <= (w/grange);
+  });
+  console.log(possible_states);
+
+  index = floor(map(mx,0,w,0,possible_states.length));
+
+  var tnum = fixed_vals.filter(function(val){
+    return val <= num;
+  }).slice(-1)[0];
+  num = possible_states[index];
+
+
+  interval = w/num;
+  tinterval = map(my,h,0,1,50);
+  console.log(interval,w/interval, mx);
+  redrawKelp(interval);
 }
 
 
 
+var touchMoved= function(){
+  clicked(touchX,touchY);
+}
+
 var touchEnded= function(){
-  clicked(mouseX,mouseY);
+  clicked(touchX,touchY);
 }
 
 var draw = function(){
@@ -71,46 +116,36 @@ var draw = function(){
 
   background(bcol);
 
-
-
-  for(var i=0;i<pool.length; i++){
-    var p = pool[i];
-    p.update();
-    p.render();
+  var ydim = pool.length/gdim;
+  for(var i=0; i<w/gres; i+=1){
+    for(var j=0; j<h/gres; j+=1){
+      var index = i*ydim+j;
+      var p = pool[index];
+      p.update();
+      p.render();
+    }
   }
-
+  t+=tinterval;
 }
 
 
 
 
-function Shape(x,y, angle){
-  this.x = x;
-  this.y = y;
+function Shape(i,j, angle){
+  this.i = i;
+  this.j = j;
+  this.x = i*gres;
+  this.y = j*gres;
+  this.radius = gres/2;
   this.par =random(360);
-  this.radius = res/2;
   this.thickness = 100;
-  this.angle = angle;
-  this.angle_speed=map(Math.abs(h/2-this.y),0,h/2,10,0);
-  var maxval= this.radius*2 ;
-  var minval = this.radius*0.8;
-  this.direction = -1;
-  if(random()<0.5){this.direction=1}
 
   this.update = function(){
-   // this.radius+=(this.direction*5);
-
-    if(this.radius>maxval || this.radius<minval){
-        this.direction*=-1;
-    }
-
-
-    this.angle+=this.angle_speed;
-
   }
 
+
   this.render = function(){
-    i=this.radius*(1+cos(frameCount*gspeed+((this.x+this.y+1)/100)+this.par));
+    i=this.radius*(1+cos(t+((this.x+this.y+1)/100)+this.par));
     push();
     translate(this.x, this.y);
     fill(fcol);
